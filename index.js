@@ -17,6 +17,7 @@ async function run() {
         await client.connect();
 
         const inventoriesCollection = client.db('organicGrocer').collection('inventory');
+        const blogsCollection = client.db('organicGrocer').collection('blogs');
 
         // inventories api
         app.get('/inventory', async (req, res) => {
@@ -29,7 +30,32 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const inventory = await inventoriesCollection.findOne(query);
             res.send(inventory);
+        });
+
+        // use put update quantity
+        app.put('/updateQuantity/:id', async (req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+            const filter = {_id: ObjectId(id) }
+            const options = {upsert: true};
+            const updateDoc = {
+                $set: {
+                    quantity: data.updateQuantity,
+                }
+            }
+            const result = await inventoriesCollection.updateOne(
+                filter,
+                updateDoc,
+                options
+            );
+            res.send(result);
         })
+
+        // blogs api
+        app.get('/blogs', async (req, res) => {
+            const result = await blogsCollection.find().toArray();
+            res.send(result);
+        });
 
     }
     finally { }

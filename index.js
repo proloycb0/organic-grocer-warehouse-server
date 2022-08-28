@@ -32,6 +32,22 @@ async function run() {
             res.send(inventory);
         });
 
+        // post
+        app.post('/inventory', async (req, res) => {
+            const newItem = req.body;
+            const result = await inventoriesCollection.insertOne(newItem);
+            res.send(result);
+        })
+
+
+        // delete
+        app.delete('/inventory/:id', async (req,res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const inventory = await inventoriesCollection.deleteOne(query);
+            res.send(inventory);
+        })
+
         // use put update quantity
         app.put('/updateQuantity/:id', async (req, res) => {
             const id = req.params.id;

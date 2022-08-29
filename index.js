@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -19,10 +20,32 @@ async function run() {
         const inventoriesCollection = client.db('organicGrocer').collection('inventory');
         const blogsCollection = client.db('organicGrocer').collection('blogs');
 
+        // jwt 
+        app.post('/login', async (req, res) => {
+            const email = req.body;
+            const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET);
+            res.send({token})
+            console.log(token);
+        })
+
         // inventories api
         app.get('/inventory', async (req, res) => {
             const result = await inventoriesCollection.find().toArray();
             res.send(result);
+        });
+
+        // my items with email
+        app.get('/myInventory', async (req, res) => {
+            const tokenInfo = req.headers.authorization;
+            const [email, accessToken] = tokenInfo?.split(" ");
+            const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+            if(email === decoded.email){
+                const inventoryInfo = await inventoriesCollection.find({email: email}).toArray();
+                res.send(inventoryInfo);
+            }
+            else{
+                res.send({success: 'failed'})
+            }
         });
 
         app.get('/inventory/:id', async (req, res) => {
@@ -37,7 +60,7 @@ async function run() {
             const newItem = req.body;
             const result = await inventoriesCollection.insertOne(newItem);
             res.send(result);
-        })
+        });
 
 
         // delete

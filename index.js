@@ -32,8 +32,25 @@ async function run() {
 
         // inventories api
         app.get('/inventory', async (req, res) => {
-            const result = await inventoriesCollection.find().toArray();
+            console.log('query', req.query)
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+
+            const query = {};
+            const cursor = inventoriesCollection.find(query);
+            let result;
+            if(page || size){
+                result = await cursor.skip(page*size).limit(size).toArray();
+            }
+            else{
+                result = await cursor.toArray();
+            }
+             
             res.send(result);
+        });
+        app.get('/inventoryCount', async (req, res) => {
+            const result = await inventoriesCollection.find().count();
+            res.send({result});
         });
 
         // my items with email
